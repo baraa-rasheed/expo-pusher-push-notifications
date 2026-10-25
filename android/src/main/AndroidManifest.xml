@@ -6,5 +6,6 @@
         <action android:name="com.google.firebase.MESSAGING_EVENT" />
       </intent-filter>
     </service>
+    <receiver android:name="expo.modules.pusherpushnotifications.LocalNotificationReceiver" android:exported="false" />
   </application>
 </manifest>
