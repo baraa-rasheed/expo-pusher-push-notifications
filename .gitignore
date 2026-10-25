@@ -1,0 +1,8 @@
+node_modules/
+build/
+plugin/build/
+.DS_Store
+android/build/
+ios/build/
+*.log
+package-lock.json

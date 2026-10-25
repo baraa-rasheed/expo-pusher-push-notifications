@@ -1,0 +1,75 @@
+{
+  "name": "expo-pusher-push-notifications",
+  "version": "0.1.0",
+  "description": "Pusher Beams push notifications for Expo (Expo Modules API)",
+  "main": "build/index.js",
+  "types": "build/index.d.ts",
+  "scripts": {
+    "build": "expo-module build",
+    "clean": "expo-module clean",
+    "lint": "expo-module lint",
+    "test": "expo-module test",
+    "prepare": "expo-module prepare",
+    "prepublishOnly": "expo-module prepublishOnly",
+    "build:all": "tsc -p tsconfig.json && tsc -p plugin/tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p plugin/tsconfig.json --noEmit"
+  },
+  "keywords": [
+    "react-native",
+    "expo",
+    "expo-pusher-push-notifications",
+    "ExpoPusherPushNotifications",
+    "pusher",
+    "pusher-beams",
+    "push-notifications",
+    "config-plugin"
+  ],
+  "repository": "https://github.com/baraa-rasheed/expo-pusher-push-notifications",
+  "bugs": {
+    "url": "https://github.com/baraa-rasheed/expo-pusher-push-notifications/issues"
+  },
+  "author": "Baraa Rasheed <baraa-rasheed@users.noreply.github.com> (https://github.com/baraa-rasheed)",
+  "license": "MIT",
+  "homepage": "https://github.com/baraa-rasheed/expo-pusher-push-notifications#readme",
+  "devDependencies": {
+    "@babel/core": "^7.26.0",
+    "@expo/config-plugins": "^58.0.10",
+    "@react-native/jest-preset": "0.88.0",
+    "@types/jest": "^30.0.0",
+    "@types/react": "~19.3.0",
+    "babel-preset-expo": "~58.0.15",
+    "eslint": "~9.39.4",
+    "eslint-config-universe": "^16.1.2",
+    "expo": "^58.0.11",
+    "expo-module-scripts": "^56.0.3",
+    "jest": "^30.0.0",
+    "jest-expo": "~58.0.11",
+    "prettier": "^3.0.0",
+    "react": "19.3.0",
+    "react-native": "0.88.0",
+    "typescript": "~6.0.3"
+  },
+  "jest": {
+    "preset": "jest-expo",
+    "roots": [
+      "<rootDir>/src"
+    ]
+  },
+  "peerDependencies": {
+    "expo": "*",
+    "react": "*",
+    "react-native": "*"
+  },
+  "files": [
+    "build",
+    "plugin/build",
+    "ios",
+    "android",
+    "app.plugin.js",
+    "expo-module.config.json",
+    "!**/__tests__",
+    "!android/build",
+    "!ios/build"
+  ],
+  "dependencies": {}
+}
