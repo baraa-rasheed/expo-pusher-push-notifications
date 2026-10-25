@@ -2,11 +2,17 @@ import type { EventSubscription } from 'expo-modules-core';
 
 import Native from './ExpoPusherPushNotificationsModule';
 import type {
-  BeamsTokenProvider,
+  AndroidNotificationChannel,
+  BeamsAuth,
+  DevicePushToken,
   ExpoPusherPushNotificationsModuleEvents,
+  LocalNotification,
+  PermissionStatus,
   PusherConfig,
   PusherEventName,
+  PusherNotification,
   PusherTransportMode,
+  ScheduledNotification,
 } from './ExpoPusherPushNotifications.types';
 
 export * from './ExpoPusherPushNotifications.types';
@@ -14,69 +20,167 @@ export * from './ExpoPusherPushNotifications.types';
 let currentMode: PusherTransportMode = 'interests';
 let started = false;
 
-function assertStarted(): void {
-  if (!started) throw new Error('expo-pusher-push-notifications: call start() before using the API.');
+const PREFIX = 'expo-pusher-push-notifications';
+
+function assertBeams(fn: string): void {
+  if (!started) throw new Error(`${PREFIX}: call start() before ${fn}().`);
+  if (currentMode === 'device') {
+    throw new Error(`${PREFIX}: ${fn}() is a Pusher Beams API and is unavailable in 'device' mode.`);
+  }
 }
 
-/** Starts the Pusher Beams SDK and chooses the transport mode. */
-export async function start(config: PusherConfig): Promise<void> {
-  currentMode = config.mode ?? 'interests';
+/**
+ * Starts the module in one of three modes.
+ * - `interests` / `users`: starts the Pusher Beams SDK (requires `instanceId`).
+ * - `device`: does NOT start Beams; registers with FCM/APNs and resolves the raw device token.
+ * Resolves with the device token in `device` mode, otherwise `null`.
+ */
+export async function start(config: PusherConfig): Promise<DevicePushToken | null> {
+  const mode = config.mode ?? 'interests';
+  if (config.requestPermission !== false) await Native.requestPermission();
+  currentMode = mode;
+  if (mode === 'device') {
+    const token = await Native.registerForDeviceToken();
+    started = true;
+    return token;
+  }
+  if (!config.instanceId) throw new Error(`${PREFIX}: instanceId is required for '${mode}' mode.`);
   await Native.start(config.instanceId);
   started = true;
+  return null;
 }
 
 export function getMode(): PusherTransportMode {
   return currentMode;
 }
 
-// ---- Interests mode (Beams interests) ----
+// ---- Mode 1: Beams interests ----
 export async function subscribe(interest: string): Promise<void> {
-  assertStarted();
+  assertBeams('subscribe');
   await Native.addDeviceInterest(interest);
 }
 export async function unsubscribe(interest: string): Promise<void> {
-  assertStarted();
+  assertBeams('unsubscribe');
   await Native.removeDeviceInterest(interest);
 }
 export async function setSubscriptions(interests: string[]): Promise<void> {
-  assertStarted();
+  assertBeams('setSubscriptions');
   await Native.setDeviceInterests(interests);
 }
 export async function getSubscriptions(): Promise<string[]> {
-  assertStarted();
+  assertBeams('getSubscriptions');
   return Native.getDeviceInterests();
 }
 export async function clearSubscriptions(): Promise<void> {
-  assertStarted();
+  assertBeams('clearSubscriptions');
   await Native.clearDeviceInterests();
 }
 
-// ---- Users mode (Beams Authenticated Users, which targets devices by user) ----
-export async function setUserId(userId: string, tokenProvider: BeamsTokenProvider): Promise<void> {
-  assertStarted();
-  await Native.setUserId(userId, tokenProvider);
+// ---- Mode 2: Beams authenticated users ----
+/** Pass a token provider `{ url, headers?, queryParams? }` or a pre-fetched Beams token string. */
+export async function setUserId(userId: string, auth: BeamsAuth): Promise<void> {
+  assertBeams('setUserId');
+  if (typeof auth === 'string') await Native.setUserIdWithToken(userId, auth);
+  else await Native.setUserId(userId, auth);
+}
+
+// ---- Mode 3: raw device token (direct FCM / APNs) ----
+/** Registers with FCM/APNs (if needed) and returns the native token. Works in any mode. */
+export async function registerForDeviceToken(): Promise<DevicePushToken> {
+  return Native.registerForDeviceToken();
+}
+/** Last known native token, or null if not registered yet. */
+export async function getDevicePushToken(): Promise<DevicePushToken | null> {
+  return Native.getDevicePushToken();
+}
+/** Android: deletes the FCM token (a new one is issued on next register). iOS: unregisters from APNs. */
+export async function deleteDevicePushToken(): Promise<void> {
+  await Native.deleteDevicePushToken();
+}
+
+// ---- Permissions ----
+export function requestPermission(): Promise<PermissionStatus> {
+  return Native.requestPermission();
+}
+export function getPermissionStatus(): Promise<PermissionStatus> {
+  return Native.getPermissionStatus();
+}
+
+// ---- Android notification channels (no-ops on iOS) ----
+export function createChannel(channel: AndroidNotificationChannel): Promise<void> {
+  return Native.createChannel(channel);
+}
+export function deleteChannel(id: string): Promise<void> {
+  return Native.deleteChannel(id);
+}
+export function getChannels(): Promise<AndroidNotificationChannel[]> {
+  return Native.getChannels();
+}
+
+// ---- Badge ----
+export function getBadgeCount(): Promise<number> {
+  return Native.getBadgeCount();
+}
+export function setBadgeCount(count: number): Promise<void> {
+  return Native.setBadgeCount(Math.max(0, Math.floor(count)));
+}
+export async function incrementBadgeCount(by = 1): Promise<number> {
+  const next = (await Native.getBadgeCount()) + by;
+  await setBadgeCount(next);
+  return Math.max(0, next);
+}
+
+// ---- Local notifications ----
+export function presentLocalNotification(n: LocalNotification): Promise<string> {
+  return Native.presentLocalNotification(n);
+}
+export function scheduleLocalNotification(n: ScheduledNotification): Promise<string> {
+  if (!(n.seconds >= 1)) throw new Error(`${PREFIX}: seconds must be >= 1.`);
+  return Native.scheduleLocalNotification(n);
+}
+export function cancelScheduledNotification(id: string): Promise<void> {
+  return Native.cancelScheduledNotification(id);
+}
+export function cancelAllScheduledNotifications(): Promise<void> {
+  return Native.cancelAllScheduledNotifications();
+}
+export function dismissAllNotifications(): Promise<void> {
+  return Native.dismissAllNotifications();
+}
+/** The notification whose tap launched the app (cold start), if any. */
+export function getInitialNotification(): Promise<PusherNotification | null> {
+  return Native.getInitialNotification();
 }
 
 // ---- Common ----
 export async function clearAllState(): Promise<void> {
-  await Native.clearAllState();
+  if (currentMode !== 'device') await Native.clearAllState();
 }
 export async function stop(): Promise<void> {
-  await Native.stop();
+  if (currentMode === 'device') await Native.deleteDevicePushToken();
+  else await Native.stop();
   started = false;
 }
 
-/** Adds an event listener. The same events fire in both modes. */
+/** Adds an event listener. Events fire in all modes. */
 export function addListener<E extends PusherEventName>(
   eventName: E,
   listener: ExpoPusherPushNotificationsModuleEvents[E]
 ): EventSubscription {
   return Native.addListener(eventName, listener);
 }
-/** Alias for `addListener`, kept for code written against the old package's `on()`. */
+/** Alias for `addListener` (old package's `on()`). */
 export const on = addListener;
 
 export default {
-  start, getMode, subscribe, unsubscribe, setSubscriptions, getSubscriptions, clearSubscriptions,
-  setUserId, clearAllState, stop, addListener, on,
+  start, getMode,
+  subscribe, unsubscribe, setSubscriptions, getSubscriptions, clearSubscriptions,
+  setUserId,
+  registerForDeviceToken, getDevicePushToken, deleteDevicePushToken,
+  requestPermission, getPermissionStatus,
+  createChannel, deleteChannel, getChannels,
+  getBadgeCount, setBadgeCount, incrementBadgeCount,
+  presentLocalNotification, scheduleLocalNotification, cancelScheduledNotification,
+  cancelAllScheduledNotifications, dismissAllNotifications, getInitialNotification,
+  clearAllState, stop, addListener, on,
 } as const;
