@@ -7,21 +7,47 @@ Push notifications for Expo and React Native. Two ways to use it:
 
 Both get custom sounds, Android channels, badges, and local notifications.
 
+## Prerequisites
+
+Do these before installing. Which ones you need depends on your path.
+
+**Android (all paths)**
+
+1. Create a project in the [Firebase console](https://console.firebase.google.com) and add an Android app with your `android.package`.
+2. Download `google-services.json` into your project and set `"android": { "googleServicesFile": "./google-services.json" }` in `app.json`.
+3. Beams path only: in Firebase → Project settings → Service accounts, generate a private key (JSON). You'll upload it to Beams.
+
+**Apple (all paths)**
+
+1. In your Apple Developer account, enable the **Push Notifications** capability on your App ID (`ios.bundleIdentifier`).
+2. Create an **APNs auth key (.p8)** under Keys (note the Key ID and Team ID). A .p12 certificate works too, but the key is simpler and doesn't expire.
+3. Set `apsEnvironment` in the plugin: `development` for dev builds, `production` for TestFlight / App Store. The plugin writes the `aps-environment` entitlement for you.
+
+**Beams (Interests / Users paths only)**
+
+Create a Beams instance in the [Pusher dashboard](https://dashboard.pusher.com/beams), upload your APNs key and FCM service account JSON, and copy the instance ID. Skip this entirely for the device-token path.
+
+Full details in [Setup](docs/setup.md).
+
+## Install
+
 ```sh
 npx expo install expo-pusher-push-notifications
 ```
 
-Needs Expo SDK 58+ and a development build (Expo Go can't load native modules).
+Needs Expo SDK 58+ and a development build (Expo Go can't load native modules). Run `npx expo prebuild` after adding the plugin.
 
-## Quick start
+## Getting started
 
-Add the config plugin to `app.json`:
+Pick the path that matches how you send pushes. You can combine Interests and Users; DeviceToken is for when you don't use Beams at all.
+
+### Interests (Beams topics)
+
+`app.json`:
 
 ```json
 ["expo-pusher-push-notifications", { "instanceId": "YOUR_BEAMS_INSTANCE_ID" }]
 ```
-
-Then in your app:
 
 ```ts
 import { Interests } from 'expo-pusher-push-notifications';
@@ -30,7 +56,43 @@ await Interests.start('YOUR_BEAMS_INSTANCE_ID');
 await Interests.subscribe('news');
 ```
 
-That device now gets pushes sent to `news`. Full console steps (APNs, Firebase, Beams) are in [Setup](docs/setup.md).
+That device now gets pushes sent to `news`.
+
+### Users (Beams, bind to your signed-in user)
+
+`app.json`:
+
+```json
+["expo-pusher-push-notifications", { "instanceId": "YOUR_BEAMS_INSTANCE_ID", "mode": "users" }]
+```
+
+```ts
+import { Users } from 'expo-pusher-push-notifications';
+
+await Users.start('YOUR_BEAMS_INSTANCE_ID');
+// after your own sign-in; url = your Beams token provider
+await Users.login('user-123', {
+  url: 'YOUR_BEAMS_TOKEN_URL',
+  headers: { Authorization: `Bearer ${sessionToken}` },
+});
+```
+
+That user now gets pushes on every device they're signed in on.
+
+### DeviceToken (no Beams)
+
+`app.json` — no `instanceId`:
+
+```json
+["expo-pusher-push-notifications", { "mode": "device" }]
+```
+
+```ts
+import { DeviceToken } from 'expo-pusher-push-notifications';
+
+const { type, token } = await DeviceToken.start(); // type: 'fcm' | 'apns'
+// send token to your backend, which pushes via FCM / APNs directly
+```
 
 ## Path 1: Pusher Beams
 

@@ -1,6 +1,6 @@
 {
   "name": "expo-pusher-push-notifications",
-  "version": "0.5.1",
+  "version": "0.5.2",
   "description": "Push notifications for Expo: Pusher Beams (interests / users) or raw FCM/APNs device tokens (no EAS needed), with custom sounds, channels, badges and local notifications",
   "main": "build/index.js",
   "types": "build/index.d.ts",

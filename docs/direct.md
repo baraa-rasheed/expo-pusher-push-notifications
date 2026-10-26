@@ -1,5 +1,7 @@
 # Device token (raw FCM / APNs, no Beams)
 
+> Before you start: finish the [Prerequisites](setup.md#prerequisites) (Firebase + APNs; no Beams instance needed).
+
 **Use this when** your app has its own push path: your backend (or another provider) sends to FCM and APNs directly.
 No Beams instance needed. You get the raw native token and do what you want with it.
 

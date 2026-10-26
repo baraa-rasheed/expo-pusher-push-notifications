@@ -1,5 +1,7 @@
 # Bind a device to a user
 
+> Before you start: finish the [Prerequisites](setup.md#prerequisites) (Firebase + APNs, plus a Beams instance).
+
 Bind the device to the signed-in user so pushes for that user reach every device they're signed in on. Call `Users.login` after your own sign-in, and `Users.logout` on sign-out.
 
 ## In the app

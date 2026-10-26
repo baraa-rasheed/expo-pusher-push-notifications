@@ -1,5 +1,7 @@
 # Interests (topics)
 
+> Before you start: finish the [Prerequisites](setup.md#prerequisites) (Firebase + APNs, plus a Beams instance).
+
 Use interests when many devices should get the same push. Think topics: `news`, `order-42`, `team-7`.
 
 ## Client
