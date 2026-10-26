@@ -73,7 +73,7 @@ The plugin also adds the `remote-notification` background mode on iOS. On Androi
 
 ## Start, per path
 
-Pick one (Interests and Users can be combined).
+The Beams paths (Interests, Users) and the DeviceToken path are independent: use either or both. To use both, start Beams and call `registerForDeviceToken()` (works in any mode) instead of `DeviceToken.start()`.
 
 | Path | Plugin config | First call |
 |---|---|---|
