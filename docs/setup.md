@@ -1,7 +1,5 @@
 # Setup
 
-You need this for both modes.
-
 ## Install
 
 ```sh
@@ -17,7 +15,6 @@ npx expo install expo-pusher-push-notifications
     "android": { "package": "com.you.app", "googleServicesFile": "./google-services.json" },
     "plugins": [
       ["expo-pusher-push-notifications", {
-        "mode": "interests",
         "instanceId": "YOUR_BEAMS_INSTANCE_ID",
         "apsEnvironment": "development",
         "sounds": ["./assets/sounds/ding.wav", "./assets/sounds/alarm.caf"],
@@ -40,7 +37,7 @@ Then run `npx expo prebuild` and build a development build. Expo Go cannot load 
 
 | Option | Default | What it does |
 |---|---|---|
-| `mode` | `interests` | Written to Info.plist and the manifest so native code can read it. |
+| `mode` | `interests` | Which Beams auth path your app uses: `interests`, or `users` if you bind devices to signed-in users. Written to Info.plist and the manifest. You can leave it out. |
 | `instanceId` | none | Beams instance ID. |
 | `apsEnvironment` | `development` | Sets the `aps-environment` entitlement. Use `production` for TestFlight and App Store builds. |
 | `sounds` | `[]` | Sound files to bundle. **Android:** copied to `res/raw` with names lower-cased to `[a-z0-9_]`. **iOS:** copied into the app target and added to its resources. iOS needs `.wav`, `.caf`, or `.aiff` under 30 s. |
@@ -48,14 +45,14 @@ Then run `npx expo prebuild` and build a development build. Expo Go cannot load 
 | `androidDefaultChannelId` | first channel, or `default` | Used by FCM/Beams notifications that don't name a channel. Also sets `com.google.firebase.messaging.default_notification_channel_id`. |
 | `iosShowInForeground` | `true` | Shows the banner, plays the sound, and updates the badge while the app is in the foreground. |
 
-The plugin also adds the `remote-notification` background mode on iOS. On Android, the library manifest declares one FCM service for all modes (it extends the Beams `MessagingService`), the `POST_NOTIFICATIONS` permission, and a receiver for scheduled local notifications.
+The plugin also adds the `remote-notification` background mode on iOS. On Android, the library manifest declares one FCM service (it extends the Beams `MessagingService`), the `POST_NOTIFICATIONS` permission, and a receiver for scheduled local notifications.
 
 ## Console setup
 
 1. **iOS:** enable the Push Notifications capability. The plugin sets the entitlement. Create an APNs auth key (.p8).
 2. **Android:** create a Firebase project, download `google-services.json`, and point `android.googleServicesFile` at it.
 3. **Beams:** create a Beams instance in the [Pusher dashboard](https://dashboard.pusher.com/beams), then upload your APNs key and your FCM service account to it.
-4. **Users mode only:** add an authenticated endpoint to your backend that returns `{ "token": beamsClient.generateToken(userId) }` (see the [Beams auth docs](https://pusher.com/docs/beams/guides/publish-to-specific-user/)).
+4. **If you bind devices to users:** add an authenticated endpoint to your backend that returns `{ "token": beamsClient.generateToken(userId) }` (see the [Beams auth docs](https://pusher.com/docs/beams/guides/publish-to-specific-user/)).
 
 ## Permissions
 

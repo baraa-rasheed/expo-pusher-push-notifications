@@ -21,7 +21,7 @@ Neither original had custom sounds, notification channels, or local and schedule
 
 ## Coming from 0.3
 
-0.4 removes the `DeviceToken` mode (`DeviceToken`, `registerForDeviceToken`, `getDevicePushToken`, `deleteDevicePushToken`, and `mode: 'device'`). This package is Pusher Beams only now. If you need a raw FCM / APNs token for your own server, use [`expo-notifications`](https://docs.expo.dev/versions/latest/sdk/notifications/) and `getDevicePushTokenAsync()` instead.
+0.4 removes raw device-token support (`DeviceToken`, `registerForDeviceToken`, `getDevicePushToken`, `deleteDevicePushToken`, and `mode: 'device'`). This package is Pusher Beams only now. If you need a raw FCM / APNs token for your own server, use [`expo-notifications`](https://docs.expo.dev/versions/latest/sdk/notifications/) and `getDevicePushTokenAsync()` instead.
 
 ## Steps
 

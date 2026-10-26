@@ -28,7 +28,7 @@ export interface PusherPluginProps {
   instanceId?: string;
   /** APNs environment for the aps-environment entitlement. Defaults to "development". */
   apsEnvironment?: 'development' | 'production';
-  /** Default mode written to native config. Defaults to "interests". */
+  /** Beams auth path written to native config (`interests` or `users`). Defaults to "interests". */
   mode?: 'interests' | 'users';
   /**
    * Sound files (paths relative to the project root) to bundle. Android: copied to res/raw

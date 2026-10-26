@@ -1,9 +1,10 @@
-# Mode 2: Beams authenticated users
+# Bind a device to a user
 
-**Use this when** your backend thinks in user ids: "send this to user-123", on every device they're signed in on.
-You need a Pusher Beams instance and one auth endpoint on your server.
+When your backend thinks in user ids ("send this to user-123"), bind the device to the signed-in user and Beams will deliver to every device they're signed in on.
 
-## Client
+How it works: after your own sign-in, the app calls `Users.login(userId, …)`. Beams then asks **your API** for a short-lived auth token, which proves this user really is `user-123`. So you need one authenticated endpoint on your server.
+
+## In the app
 
 ```ts
 import { Users } from 'expo-pusher-push-notifications';
@@ -23,7 +24,7 @@ await Users.login('user-123', beamsToken);
 await Users.logout();
 ```
 
-## Server (Node)
+## On your server (Node)
 
 ```js
 // GET /pusher/beams-auth  (must be authenticated, and user_id must match the session)
@@ -49,7 +50,7 @@ See Pusher's [auth guide](https://pusher.com/docs/beams/guides/publish-to-specif
 | `Users.logout()` | Unbinds the device from the user. |
 | `Users.stop()` | Stop Beams. |
 
-Interests still work in this mode if you want both.
+You can still subscribe to interests on a device that's bound to a user.
 
 
 ---
