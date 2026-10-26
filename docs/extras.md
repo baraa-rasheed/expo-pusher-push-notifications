@@ -29,7 +29,7 @@ await Push.setBadgeCount(0);      // clear
 
 - **iOS:** uses the real app icon badge (`UNUserNotificationCenter.setBadgeCount`). Payloads can also set `aps.badge`.
 - **Android:** there is no system badge API. The module keeps a counter, applies it as the notification number on notifications it posts, and clears the shade when you set the count to `0`. Launchers show dots or counts based on the channel's `showBadge` setting.
-- **`incrementBadge` (from b8ne):** add `"incrementBadge": true` under `aps.data` or a top-level `data` (iOS), or `"incrementBadge": "true"` in FCM `data` (Android), and the badge goes up by one on the device. Your backend doesn't need to track counts.
+- **`incrementBadge` (from b8ne):** add `"incrementBadge": true` under `aps.data` or a top-level `data` (iOS), or `"incrementBadge": "true"` in FCM `data` (Android), and the badge goes up by one on the device.
 
 ## Local notifications
 

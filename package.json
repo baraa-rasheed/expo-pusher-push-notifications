@@ -1,6 +1,6 @@
 {
   "name": "expo-pusher-push-notifications",
-  "version": "0.4.1",
+  "version": "0.4.2",
   "description": "Pusher Beams push notifications for Expo (interests and authenticated users), with custom sounds, Android channels, badges and local notifications",
   "main": "build/index.js",
   "types": "build/index.d.ts",
