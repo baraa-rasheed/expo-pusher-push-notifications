@@ -1,7 +1,7 @@
 {
   "name": "expo-pusher-push-notifications",
-  "version": "0.2.0",
-  "description": "Pusher Beams (interests + authenticated users) and raw FCM/APNs device-token push for Expo, with custom sounds, channels, badges and local notifications",
+  "version": "0.3.0",
+  "description": "Push notifications for Expo: Pusher Beams (interests or users) or direct FCM/APNs device tokens, with custom sounds, channels, badges and local notifications",
   "main": "build/index.js",
   "types": "build/index.d.ts",
   "scripts": {
@@ -65,6 +65,7 @@
     "react-native": "*"
   },
   "files": [
+    "docs",
     "build",
     "plugin/build",
     "ios",

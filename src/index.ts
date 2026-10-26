@@ -172,7 +172,68 @@ export function addListener<E extends PusherEventName>(
 /** Alias for `addListener` (old package's `on()`). */
 export const on = addListener;
 
+// ---------------------------------------------------------------------------
+// Mode-scoped API. Pick ONE of these three and ignore the other two.
+// Everything below (sounds, channels, badges, local notifications, events)
+// is shared and works in every mode.
+// ---------------------------------------------------------------------------
+
+/**
+ * Mode 1 — Pusher Beams **interests** (topic broadcast).
+ * Use when many devices should get the same push: "news", "order-42", "team-7".
+ * Server: `beams.publishToInterests([...], payload)`.
+ */
+export const Interests = {
+  /** Start Beams in interests mode. */
+  start: (instanceId: string, opts: { requestPermission?: boolean } = {}) =>
+    start({ ...opts, instanceId, mode: 'interests' }).then(() => undefined),
+  subscribe,
+  unsubscribe,
+  set: setSubscriptions,
+  get: getSubscriptions,
+  clear: clearSubscriptions,
+  /** Forget everything (call on logout). */
+  reset: clearAllState,
+  stop,
+} as const;
+
+/**
+ * Mode 2 — Pusher Beams **authenticated users** (push to a person, across all their devices).
+ * Use when your backend thinks in user ids: "send to user-123".
+ * Server: `beams.publishToUsers(['user-123'], payload)` + a token endpoint (`beams.generateToken`).
+ */
+export const Users = {
+  /** Start Beams in users mode. Call `login()` after your own sign-in. */
+  start: (instanceId: string, opts: { requestPermission?: boolean } = {}) =>
+    start({ ...opts, instanceId, mode: 'users' }).then(() => undefined),
+  /** Bind this device to `userId`. `auth` is your token endpoint, or a Beams token you already fetched. */
+  login: setUserId,
+  /** Unbind the device (call on sign-out). */
+  logout: clearAllState,
+  stop,
+} as const;
+
+/**
+ * Mode 3 — **direct FCM / APNs** (no Pusher at all).
+ * Use when your server already talks to FCM HTTP v1 / APNs, or you use another provider.
+ * You get the raw native token; send it to your backend and keep it fresh via the `registered` event.
+ */
+export const DeviceToken = {
+  /** Register with FCM/APNs and resolve the native token. */
+  start: async (opts: { requestPermission?: boolean } = {}): Promise<DevicePushToken> =>
+    (await start({ ...opts, mode: 'device' })) as DevicePushToken,
+  get: getDevicePushToken,
+  /** Fires whenever the token is issued or rotated. */
+  onChange: (cb: (token: DevicePushToken) => void): EventSubscription =>
+    addListener('registered', ({ deviceToken, type }) =>
+      cb({ token: deviceToken, type, platform: type === 'fcm' ? 'android' : 'ios' })
+    ),
+  /** Delete the token (call on sign-out). */
+  delete: deleteDevicePushToken,
+} as const;
+
 export default {
+  Interests, Users, DeviceToken,
   start, getMode,
   subscribe, unsubscribe, setSubscriptions, getSubscriptions, clearSubscriptions,
   setUserId,
