@@ -1,16 +1,14 @@
 /**
- * Delivery mode.
+ * Pusher Beams delivery mode.
  *
- * - `interests`: Pusher Beams interests. Devices subscribe to named interests; server calls Beams `publishToInterests`.
- * - `users`: Pusher Beams Authenticated Users. Device is bound to a user via `setUserId`; server calls Beams `publishToUsers`.
- * - `device`: Raw device-token push. Beams is NOT started. The module obtains the native FCM (Android) /
- *   APNs (iOS) device token and hands it to you; your server sends directly to FCM / APNs.
+ * - `interests`: devices subscribe to named interests; your server calls Beams `publishToInterests`.
+ * - `users`: the device is bound to a user via `setUserId`; your server calls Beams `publishToUsers`.
  */
-export type PusherTransportMode = 'interests' | 'users' | 'device';
+export type PusherTransportMode = 'interests' | 'users';
 
 export interface PusherConfig {
-  /** Pusher Beams instance ID. Required for `interests` and `users`; ignored for `device`. */
-  instanceId?: string;
+  /** Pusher Beams instance ID. */
+  instanceId: string;
   /** Defaults to `interests`. */
   mode?: PusherTransportMode;
   /** Ask for notification permission (iOS alert/sound/badge, Android 13+ POST_NOTIFICATIONS) during start. Default true. */
@@ -31,15 +29,6 @@ export interface BeamsTokenProvider {
  */
 export type BeamsAuth = BeamsTokenProvider | string;
 
-export type DevicePushTokenType = 'fcm' | 'apns';
-
-export interface DevicePushToken {
-  type: DevicePushTokenType;
-  /** FCM registration token (Android) or hex-encoded APNs token (iOS). */
-  token: string;
-  platform: 'android' | 'ios';
-}
-
 export interface PusherNotification {
   title?: string;
   body?: string;
@@ -49,9 +38,9 @@ export interface PusherNotification {
 }
 
 export interface RegisteredEvent {
-  /** Native device token. In `device` mode this is the token your server sends to. */
+  /** Native token the device registered with (FCM on Android, hex APNs on iOS). Beams handles it for you. */
   deviceToken: string;
-  type: DevicePushTokenType;
+  type: 'fcm' | 'apns';
 }
 
 export interface SubscriptionsChangedEvent {
