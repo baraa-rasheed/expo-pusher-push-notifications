@@ -1,5 +1,5 @@
 /**
- * Pusher Beams delivery mode.
+ * Which Beams auth path the app uses.
  *
  * - `interests`: devices subscribe to named interests; your server calls Beams `publishToInterests`.
  * - `users`: the device is bound to a user via `setUserId`; your server calls Beams `publishToUsers`.
@@ -9,13 +9,13 @@ export type PusherTransportMode = 'interests' | 'users';
 export interface PusherConfig {
   /** Pusher Beams instance ID. */
   instanceId: string;
-  /** Defaults to `interests`. */
+  /** Beams auth path: `interests` (default) or `users`. */
   mode?: PusherTransportMode;
   /** Ask for notification permission (iOS alert/sound/badge, Android 13+ POST_NOTIFICATIONS) during start. Default true. */
   requestPermission?: boolean;
 }
 
-/** Remote token endpoint used by the Beams SDK in `users` mode. */
+/** Remote token endpoint used by the Beams SDK when binding a device to a user. */
 export interface BeamsTokenProvider {
   /** HTTPS endpoint on your backend that returns `{ token: string }`. */
   url: string;
@@ -24,7 +24,7 @@ export interface BeamsTokenProvider {
 }
 
 /**
- * `users` mode auth: either a remote token provider (recommended), or a pre-fetched Beams token string
+ * User auth: either a remote token provider (recommended), or a pre-fetched Beams token string
  * (the b8ne `setUserId(userId, token)` style).
  */
 export type BeamsAuth = BeamsTokenProvider | string;

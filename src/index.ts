@@ -25,7 +25,7 @@ function assertBeams(fn: string): void {
   if (!started) throw new Error(`${PREFIX}: call start() before ${fn}().`);
 }
 
-/** Starts Pusher Beams in `interests` (default) or `users` mode. */
+/** Starts Pusher Beams. */
 export async function start(config: PusherConfig): Promise<void> {
   if (!config.instanceId) throw new Error(`${PREFIX}: instanceId is required.`);
   if (config.requestPermission !== false) await Native.requestPermission();
@@ -38,7 +38,7 @@ export function getMode(): PusherTransportMode {
   return currentMode;
 }
 
-// ---- Mode 1: Beams interests ----
+// ---- Interests (topics) ----
 export async function subscribe(interest: string): Promise<void> {
   assertBeams('subscribe');
   await Native.addDeviceInterest(interest);
@@ -60,7 +60,7 @@ export async function clearSubscriptions(): Promise<void> {
   await Native.clearDeviceInterests();
 }
 
-// ---- Mode 2: Beams authenticated users ----
+// ---- Bind a device to a user ----
 /** Pass a token provider `{ url, headers?, queryParams? }` or a pre-fetched Beams token string. */
 export async function setUserId(userId: string, auth: BeamsAuth): Promise<void> {
   assertBeams('setUserId');
@@ -131,7 +131,7 @@ export async function stop(): Promise<void> {
   started = false;
 }
 
-/** Adds an event listener. Events fire in all modes. */
+/** Adds an event listener. Events fire for interests and users alike. */
 export function addListener<E extends PusherEventName>(
   eventName: E,
   listener: ExpoPusherPushNotificationsModuleEvents[E]
@@ -142,18 +142,17 @@ export function addListener<E extends PusherEventName>(
 export const on = addListener;
 
 // ---------------------------------------------------------------------------
-// Mode-scoped API. Pick ONE of these two and ignore the other.
-// Everything below (sounds, channels, badges, local notifications, events)
-// is shared and works in every mode.
+// Convenience objects. Use either or both; everything else (sounds,
+// channels, badges, local notifications, events) works the same either way.
 // ---------------------------------------------------------------------------
 
 /**
- * Mode 1 — Pusher Beams **interests** (topic broadcast).
+ * Pusher Beams **interests** (topic broadcast).
  * Use when many devices should get the same push: "news", "order-42", "team-7".
  * Server: `beams.publishToInterests([...], payload)`.
  */
 export const Interests = {
-  /** Start Beams in interests mode. */
+  /** Start Beams. */
   start: (instanceId: string, opts: { requestPermission?: boolean } = {}) =>
     start({ ...opts, instanceId, mode: 'interests' }),
   subscribe,
@@ -167,12 +166,12 @@ export const Interests = {
 } as const;
 
 /**
- * Mode 2 — Pusher Beams **authenticated users** (push to a person, across all their devices).
+ * Pusher Beams **authenticated users** (push to a person, across all their devices).
  * Use when your backend thinks in user ids: "send to user-123".
  * Server: `beams.publishToUsers(['user-123'], payload)` + a token endpoint (`beams.generateToken`).
  */
 export const Users = {
-  /** Start Beams in users mode. Call `login()` after your own sign-in. */
+  /** Start Beams. Call `login()` after your own sign-in. */
   start: (instanceId: string, opts: { requestPermission?: boolean } = {}) =>
     start({ ...opts, instanceId, mode: 'users' }),
   /** Bind this device to `userId`. `auth` is your token endpoint, or a Beams token you already fetched. */
