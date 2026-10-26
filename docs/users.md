@@ -1,8 +1,6 @@
 # Bind a device to a user
 
-When your backend thinks in user ids ("send this to user-123"), bind the device to the signed-in user and Beams will deliver to every device they're signed in on.
-
-How it works: after your own sign-in, the app calls `Users.login(userId, …)`. Beams then asks **your API** for a short-lived auth token, which proves this user really is `user-123`. So you need one authenticated endpoint on your server.
+Bind the device to the signed-in user so pushes for that user reach every device they're signed in on. Call `Users.login` after your own sign-in, and `Users.logout` on sign-out.
 
 ## In the app
 
@@ -11,9 +9,9 @@ import { Users } from 'expo-pusher-push-notifications';
 
 await Users.start('YOUR_BEAMS_INSTANCE_ID');
 
-// After your own sign-in. Beams calls this URL and refreshes the token for you.
+// After your own sign-in. Pass your Beams token provider URL (and headers, if it needs them).
 await Users.login('user-123', {
-  url: 'https://api.example.com/pusher/beams-auth',
+  url: 'YOUR_BEAMS_TOKEN_URL',
   headers: { Authorization: `Bearer ${sessionToken}` },
 });
 
@@ -23,23 +21,6 @@ await Users.login('user-123', beamsToken);
 // On sign-out
 await Users.logout();
 ```
-
-## On your server (Node)
-
-```js
-// GET /pusher/beams-auth  (must be authenticated, and user_id must match the session)
-app.get('/pusher/beams-auth', requireSession, (req, res) => {
-  res.json(beams.generateToken(req.user.id)); // { token: '…' }
-});
-
-// Send
-await beams.publishToUsers(['user-123'], {
-  apns: { aps: { alert: { title: 'Hey', body: 'You have a new message' }, sound: 'ding.wav' } },
-  fcm: { notification: { title: 'Hey', body: 'You have a new message', android_channel_id: 'messages' } },
-});
-```
-
-See Pusher's [auth guide](https://pusher.com/docs/beams/guides/publish-to-specific-user/).
 
 ## API
 

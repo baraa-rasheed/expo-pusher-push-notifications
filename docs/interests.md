@@ -1,7 +1,6 @@
 # Interests (topics)
 
 Use interests when many devices should get the same push. Think topics: `news`, `order-42`, `team-7`.
-You need a Pusher Beams instance. Your server calls `publishToInterests`.
 
 ## Client
 
@@ -18,18 +17,6 @@ await Interests.clear();
 
 // On sign-out
 await Interests.reset();
-```
-
-## Server (Node)
-
-```js
-import PushNotifications from '@pusher/push-notifications-server';
-const beams = new PushNotifications({ instanceId, secretKey });
-
-await beams.publishToInterests(['news'], {
-  apns: { aps: { alert: { title: 'Hi', body: 'News!' }, sound: 'ding.wav', badge: 3 } },
-  fcm: { notification: { title: 'Hi', body: 'News!', sound: 'ding', android_channel_id: 'messages' } },
-});
 ```
 
 ## API

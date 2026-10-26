@@ -25,7 +25,7 @@ await Interests.start('YOUR_BEAMS_INSTANCE_ID');
 await Interests.subscribe('news');
 ```
 
-That device now gets anything your server publishes to `news`. Full console steps (APNs, Firebase, Beams) are in [Setup](docs/setup.md).
+That device now gets pushes sent to `news`. Full console steps (APNs, Firebase, Beams) are in [Setup](docs/setup.md).
 
 ## Subscribe to interests (topics)
 
@@ -40,16 +40,16 @@ More in [Interests](docs/interests.md).
 
 ## Bind a device to a user
 
-When your backend thinks in user ids ("send this to user-123"), bind the device to the signed-in user. Beams asks your API for an auth token, so you need one small endpoint on your server.
+To get pushes meant for a specific signed-in user on all their devices, bind the device to that user.
 
 ```ts
 import { Users } from 'expo-pusher-push-notifications';
 
 await Users.start('YOUR_BEAMS_INSTANCE_ID');
 
-// after your own sign-in
+// after your own sign-in (url = your Beams token provider)
 await Users.login('user-123', {
-  url: 'https://api.example.com/pusher/beams-auth',
+  url: 'YOUR_BEAMS_TOKEN_URL',
   headers: { Authorization: `Bearer ${sessionToken}` },
 });
 
@@ -57,17 +57,7 @@ await Users.login('user-123', {
 await Users.logout();
 ```
 
-You can use interests and users together. See [Authenticate users](docs/users.md) for the server side.
-
-## Send from your server
-
-```js
-import PushNotifications from '@pusher/push-notifications-server';
-const beams = new PushNotifications({ instanceId, secretKey });
-
-await beams.publishToInterests(['news'], payload);  // everyone on a topic
-await beams.publishToUsers(['user-123'], payload);  // one user, all their devices
-```
+You can use interests and users together. More in [Users](docs/users.md).
 
 ## Extras
 
@@ -86,7 +76,7 @@ Custom sounds go in the plugin's `sounds` option. Details in [Extras](docs/extra
 
 - [Setup](docs/setup.md)
 - [Interests](docs/interests.md)
-- [Authenticate users](docs/users.md)
+- [Users](docs/users.md)
 - [Sounds, channels, badges, local notifications](docs/extras.md)
 - [Full API](docs/api.md)
 - [Migrating from react-native-pusher-push-notifications](docs/migrating.md)

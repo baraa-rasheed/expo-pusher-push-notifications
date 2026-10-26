@@ -52,7 +52,6 @@ The plugin also adds the `remote-notification` background mode on iOS. On Androi
 1. **iOS:** enable the Push Notifications capability. The plugin sets the entitlement. Create an APNs auth key (.p8).
 2. **Android:** create a Firebase project, download `google-services.json`, and point `android.googleServicesFile` at it.
 3. **Beams:** create a Beams instance in the [Pusher dashboard](https://dashboard.pusher.com/beams), then upload your APNs key and your FCM service account to it.
-4. **If you bind devices to users:** add an authenticated endpoint to your backend that returns `{ "token": beamsClient.generateToken(userId) }` (see the [Beams auth docs](https://pusher.com/docs/beams/guides/publish-to-specific-user/)).
 
 ## Permissions
 
