@@ -3,6 +3,7 @@ import { NativeModule, requireNativeModule } from 'expo';
 import type {
   AndroidNotificationChannel,
   BeamsTokenProvider,
+  DevicePushToken,
   ExpoPusherPushNotificationsModuleEvents,
   LocalNotification,
   PermissionStatus,
@@ -21,6 +22,10 @@ declare class ExpoPusherPushNotificationsNativeModule extends NativeModule<ExpoP
   setUserIdWithToken(userId: string, token: string): Promise<void>;
   clearAllState(): Promise<void>;
   stop(): Promise<void>;
+  // device-token mode
+  registerForDeviceToken(): Promise<DevicePushToken>;
+  getDevicePushToken(): Promise<DevicePushToken | null>;
+  deleteDevicePushToken(): Promise<void>;
   // permissions
   requestPermission(): Promise<PermissionStatus>;
   getPermissionStatus(): Promise<PermissionStatus>;

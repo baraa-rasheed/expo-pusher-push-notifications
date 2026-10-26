@@ -24,12 +24,12 @@ export interface PusherPluginChannel {
 }
 
 export interface PusherPluginProps {
-  /** Pusher Beams instance ID. */
+  /** Pusher Beams instance ID (not needed for `device` mode). */
   instanceId?: string;
   /** APNs environment for the aps-environment entitlement. Defaults to "development". */
   apsEnvironment?: 'development' | 'production';
-  /** Beams auth path written to native config (`interests` or `users`). Defaults to "interests". */
-  mode?: 'interests' | 'users';
+  /** Default mode written to native config. Defaults to "interests". */
+  mode?: 'interests' | 'users' | 'device';
   /**
    * Sound files (paths relative to the project root) to bundle. Android: copied to res/raw
    * (lower-cased, must be [a-z0-9_]). iOS: added to the main bundle. Use .wav/.caf/.aiff for iOS (<30s).

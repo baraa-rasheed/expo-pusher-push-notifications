@@ -106,6 +106,10 @@ object NotificationHelper {
     if (n <= 0) NotificationManagerCompat.from(ctx).cancelAll()
   }
 
+  fun saveToken(ctx: Context, token: String?) =
+    ctx.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit().putString("fcm_token", token).apply()
+  fun savedToken(ctx: Context) = ctx.getSharedPreferences(PREFS, Context.MODE_PRIVATE).getString("fcm_token", null)
+
   fun show(ctx: Context, id: Int, title: String?, body: String?, data: Map<String, String>, sound: String?, channelId: String?) {
     ensureChannels(ctx)
     val launch = ctx.packageManager.getLaunchIntentForPackage(ctx.packageName)?.apply {

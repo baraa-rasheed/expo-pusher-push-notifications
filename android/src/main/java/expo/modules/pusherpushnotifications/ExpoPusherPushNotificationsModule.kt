@@ -9,6 +9,7 @@ import android.content.Intent
 import android.os.Build
 import android.os.SystemClock
 import androidx.core.app.NotificationManagerCompat
+import com.google.firebase.messaging.FirebaseMessaging
 import com.pusher.pushnotifications.BeamsCallback
 import com.pusher.pushnotifications.PushNotifications
 import com.pusher.pushnotifications.PusherCallbackError
@@ -75,6 +76,24 @@ class ExpoPusherPushNotificationsModule : Module() {
     AsyncFunction("clearAllState") { PushNotifications.clearAllState() }
     AsyncFunction("stop") { PushNotifications.stop() }
 
+    // ---- Raw device token (FCM) ----
+    AsyncFunction("registerForDeviceToken") { promise: Promise ->
+      FirebaseMessaging.getInstance().token.addOnCompleteListener { t ->
+        if (t.isSuccessful && t.result != null) {
+          NotificationHelper.saveToken(context, t.result)
+          sendEvent("registered", mapOf("deviceToken" to t.result, "type" to "fcm"))
+          promise.resolve(tokenMap(t.result))
+        } else promise.reject("E_FCM_TOKEN", t.exception?.message ?: "Failed to get FCM token", t.exception)
+      }
+    }
+    AsyncFunction("getDevicePushToken") { -> NotificationHelper.savedToken(context)?.let { tokenMap(it) } }
+    AsyncFunction("deleteDevicePushToken") { promise: Promise ->
+      FirebaseMessaging.getInstance().deleteToken().addOnCompleteListener { t ->
+        NotificationHelper.saveToken(context, null)
+        if (t.isSuccessful) promise.resolve(null) else promise.reject("E_FCM_DELETE", t.exception?.message, t.exception)
+      }
+    }
+
     // ---- Permissions ----
     AsyncFunction("requestPermission") { promise: Promise ->
       val perms = appContext.permissions
@@ -139,6 +158,8 @@ class ExpoPusherPushNotificationsModule : Module() {
     override fun onSuccess(vararg values: Void) = promise.resolve(null)
     override fun onFailure(error: PusherCallbackError) = promise.reject("E_SET_USER_ID", error.message, null)
   }
+
+  private fun tokenMap(token: String) = mapOf("type" to "fcm", "platform" to "android", "token" to token)
 
   private fun status(): String =
     if (NotificationManagerCompat.from(context).areNotificationsEnabled()) PermissionsStatus.GRANTED.status

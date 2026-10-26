@@ -37,8 +37,8 @@ Then run `npx expo prebuild` and build a development build. Expo Go cannot load 
 
 | Option | Default | What it does |
 |---|---|---|
-| `mode` | `interests` | Which Beams auth path your app uses: `interests`, or `users` if you bind devices to signed-in users. Written to Info.plist and the manifest. You can leave it out. |
-| `instanceId` | none | Beams instance ID. |
+| `mode` | `interests` | `interests` or `users` for Beams, or `device` for a raw device token. Written to Info.plist and the manifest. You can leave it out. |
+| `instanceId` | none | Beams instance ID. Not needed for `device`. |
 | `apsEnvironment` | `development` | Sets the `aps-environment` entitlement. Use `production` for TestFlight and App Store builds. |
 | `sounds` | `[]` | Sound files to bundle. **Android:** copied to `res/raw` with names lower-cased to `[a-z0-9_]`. **iOS:** copied into the app target and added to its resources. iOS needs `.wav`, `.caf`, or `.aiff` under 30 s. |
 | `androidChannels` | `[]` | Channels created at startup. Set `sound` to a file name from `sounds`, or `null` for a silent channel. |
@@ -51,7 +51,7 @@ The plugin also adds the `remote-notification` background mode on iOS. On Androi
 
 1. **iOS:** enable the Push Notifications capability. The plugin sets the entitlement. Create an APNs auth key (.p8).
 2. **Android:** create a Firebase project, download `google-services.json`, and point `android.googleServicesFile` at it.
-3. **Beams:** create a Beams instance in the [Pusher dashboard](https://dashboard.pusher.com/beams), then upload your APNs key and your FCM service account to it.
+3. **Beams path only:** create a Beams instance in the [Pusher dashboard](https://dashboard.pusher.com/beams), then upload your APNs key and your FCM service account to it.
 
 ## Permissions
 

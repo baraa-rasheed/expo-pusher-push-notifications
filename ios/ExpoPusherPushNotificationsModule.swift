@@ -26,6 +26,7 @@ struct LocalNotificationRecord: Record {
 public class ExpoPusherPushNotificationsModule: Module {
   private let beams = PushNotifications.shared
   private var beamsStarted = false
+  private var tokenWaiters: [Promise] = []
   private var initialNotification: [String: Any]?
   private lazy var centerDelegate = NotificationCenterDelegate(module: self)
 
@@ -39,6 +40,8 @@ public class ExpoPusherPushNotificationsModule: Module {
       ExpoPusherAppDelegateSubscriber.onTokenError = { [weak self] error in
         guard let self = self else { return }
         self.sendEvent("error", ["code": "E_APNS_REGISTRATION", "message": error.localizedDescription])
+        let waiters = self.tokenWaiters; self.tokenWaiters = []
+        waiters.forEach { $0.reject("E_APNS_REGISTRATION", error.localizedDescription) }
       }
       ExpoPusherAppDelegateSubscriber.onNotification = { [weak self] userInfo, state in
         self?.handleRemote(userInfo, state: state)
@@ -82,6 +85,22 @@ public class ExpoPusherPushNotificationsModule: Module {
     AsyncFunction("clearAllState") { (promise: Promise) in self.beams.clearAllState { promise.resolve(nil) } }
     AsyncFunction("stop") { (promise: Promise) in
       self.beams.stop { self.beamsStarted = false; promise.resolve(nil) }
+    }
+
+    // ---- Raw device token (APNs) ----
+    AsyncFunction("registerForDeviceToken") { (promise: Promise) in
+      if let token = ExpoPusherAppDelegateSubscriber.lastToken {
+        promise.resolve(Self.tokenDict(token)); return
+      }
+      self.tokenWaiters.append(promise)
+      DispatchQueue.main.async { UIApplication.shared.registerForRemoteNotifications() }
+    }
+    AsyncFunction("getDevicePushToken") { () -> [String: Any]? in
+      ExpoPusherAppDelegateSubscriber.lastToken.map(Self.tokenDict)
+    }
+    AsyncFunction("deleteDevicePushToken") {
+      ExpoPusherAppDelegateSubscriber.lastToken = nil
+      DispatchQueue.main.async { UIApplication.shared.unregisterForRemoteNotifications() }
     }
 
     // ---- Permissions ----
@@ -130,8 +149,10 @@ public class ExpoPusherPushNotificationsModule: Module {
 
   private func handleToken(_ token: Data) {
     if beamsStarted { beams.registerDeviceToken(token) }
-    let hex = token.map { String(format: "%02x", $0) }.joined()
-    sendEvent("registered", ["deviceToken": hex, "type": "apns"])
+    let dict = Self.tokenDict(token)
+    sendEvent("registered", ["deviceToken": dict["token"]!, "type": "apns"])
+    let waiters = tokenWaiters; tokenWaiters = []
+    waiters.forEach { $0.resolve(dict) }
   }
 
   fileprivate func handleRemote(_ userInfo: [AnyHashable: Any], state: String) {
@@ -174,6 +195,10 @@ public class ExpoPusherPushNotificationsModule: Module {
     if name == "default" { return .default }
     if name == "none" { return nil }
     return UNNotificationSound(named: UNNotificationSoundName(rawValue: name))
+  }
+
+  static func tokenDict(_ token: Data) -> [String: Any] {
+    ["type": "apns", "platform": "ios", "token": token.map { String(format: "%02x", $0) }.joined()]
   }
 
   static func payload(userInfo: [AnyHashable: Any], state: String) -> [String: Any] {

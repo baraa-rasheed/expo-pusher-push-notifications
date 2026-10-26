@@ -19,9 +19,9 @@ Here is what the ZeptInc and b8ne packages had, and where it lives now:
 
 Neither original had custom sounds, notification channels, or local and scheduled notifications. Those are new here.
 
-## Coming from 0.3
+## Coming from 0.4
 
-0.4 removes raw device-token support (`DeviceToken`, `registerForDeviceToken`, `getDevicePushToken`, `deleteDevicePushToken`, and `mode: 'device'`). This package is Pusher Beams only now. If you need a raw FCM / APNs token, use [`expo-notifications`](https://docs.expo.dev/versions/latest/sdk/notifications/) and `getDevicePushTokenAsync()` instead.
+0.5 brings back device-token support (`DeviceToken`, `registerForDeviceToken`, `getDevicePushToken`, `deleteDevicePushToken`, and `mode: 'device'`), same API as 0.3. Beams code from 0.4 keeps working unchanged.
 
 ## Steps
 

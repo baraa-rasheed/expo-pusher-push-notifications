@@ -4,6 +4,7 @@ import Native from './ExpoPusherPushNotificationsModule';
 import type {
   AndroidNotificationChannel,
   BeamsAuth,
+  DevicePushToken,
   ExpoPusherPushNotificationsModuleEvents,
   LocalNotification,
   PermissionStatus,
@@ -23,15 +24,30 @@ const PREFIX = 'expo-pusher-push-notifications';
 
 function assertBeams(fn: string): void {
   if (!started) throw new Error(`${PREFIX}: call start() before ${fn}().`);
+  if (currentMode === 'device') {
+    throw new Error(`${PREFIX}: ${fn}() is a Pusher Beams API and is unavailable in 'device' mode.`);
+  }
 }
 
-/** Starts Pusher Beams. */
-export async function start(config: PusherConfig): Promise<void> {
-  if (!config.instanceId) throw new Error(`${PREFIX}: instanceId is required.`);
+/**
+ * Starts the module.
+ * - Pusher Beams (`interests` / `users`): starts the Beams SDK (requires `instanceId`).
+ * - Device token (`device`): does NOT start Beams; registers with FCM/APNs and resolves the raw device token.
+ * Resolves with the device token in `device` mode, otherwise `null`.
+ */
+export async function start(config: PusherConfig): Promise<DevicePushToken | null> {
+  const mode = config.mode ?? 'interests';
   if (config.requestPermission !== false) await Native.requestPermission();
-  currentMode = config.mode ?? 'interests';
+  currentMode = mode;
+  if (mode === 'device') {
+    const token = await Native.registerForDeviceToken();
+    started = true;
+    return token;
+  }
+  if (!config.instanceId) throw new Error(`${PREFIX}: instanceId is required for '${mode}' mode.`);
   await Native.start(config.instanceId);
   started = true;
+  return null;
 }
 
 export function getMode(): PusherTransportMode {
@@ -66,6 +82,20 @@ export async function setUserId(userId: string, auth: BeamsAuth): Promise<void> 
   assertBeams('setUserId');
   if (typeof auth === 'string') await Native.setUserIdWithToken(userId, auth);
   else await Native.setUserId(userId, auth);
+}
+
+// ---- Mode 3: raw device token (direct FCM / APNs) ----
+/** Registers with FCM/APNs (if needed) and returns the native token. Works in any mode. */
+export async function registerForDeviceToken(): Promise<DevicePushToken> {
+  return Native.registerForDeviceToken();
+}
+/** Last known native token, or null if not registered yet. */
+export async function getDevicePushToken(): Promise<DevicePushToken | null> {
+  return Native.getDevicePushToken();
+}
+/** Android: deletes the FCM token (a new one is issued on next register). iOS: unregisters from APNs. */
+export async function deleteDevicePushToken(): Promise<void> {
+  await Native.deleteDevicePushToken();
 }
 
 // ---- Permissions ----
@@ -124,10 +154,11 @@ export function getInitialNotification(): Promise<PusherNotification | null> {
 
 // ---- Common ----
 export async function clearAllState(): Promise<void> {
-  await Native.clearAllState();
+  if (currentMode !== 'device') await Native.clearAllState();
 }
 export async function stop(): Promise<void> {
-  await Native.stop();
+  if (currentMode === 'device') await Native.deleteDevicePushToken();
+  else await Native.stop();
   started = false;
 }
 
@@ -142,8 +173,8 @@ export function addListener<E extends PusherEventName>(
 export const on = addListener;
 
 // ---------------------------------------------------------------------------
-// Convenience objects. Use either or both; everything else (sounds,
-// channels, badges, local notifications, events) works the same either way.
+// Two paths: Pusher Beams (Interests / Users) or DeviceToken (raw FCM/APNs).
+// Sounds, channels, badges, local notifications and events work on both.
 // ---------------------------------------------------------------------------
 
 /**
@@ -154,7 +185,7 @@ export const on = addListener;
 export const Interests = {
   /** Start Beams. */
   start: (instanceId: string, opts: { requestPermission?: boolean } = {}) =>
-    start({ ...opts, instanceId, mode: 'interests' }),
+    start({ ...opts, instanceId, mode: 'interests' }).then(() => undefined),
   subscribe,
   unsubscribe,
   set: setSubscriptions,
@@ -173,7 +204,7 @@ export const Interests = {
 export const Users = {
   /** Start Beams. Call `login()` after your own sign-in. */
   start: (instanceId: string, opts: { requestPermission?: boolean } = {}) =>
-    start({ ...opts, instanceId, mode: 'users' }),
+    start({ ...opts, instanceId, mode: 'users' }).then(() => undefined),
   /** Bind this device to `userId`. `auth` is your token endpoint, or a Beams token you already fetched. */
   login: setUserId,
   /** Unbind the device (call on sign-out). */
@@ -181,11 +212,31 @@ export const Users = {
   stop,
 } as const;
 
+/**
+ * Mode 3 — **direct FCM / APNs** (no Pusher at all).
+ * Use when your server already talks to FCM HTTP v1 / APNs, or you use another provider.
+ * You get the raw native token; send it to your backend and keep it fresh via the `registered` event.
+ */
+export const DeviceToken = {
+  /** Register with FCM/APNs and resolve the native token. */
+  start: async (opts: { requestPermission?: boolean } = {}): Promise<DevicePushToken> =>
+    (await start({ ...opts, mode: 'device' })) as DevicePushToken,
+  get: getDevicePushToken,
+  /** Fires whenever the token is issued or rotated. */
+  onChange: (cb: (token: DevicePushToken) => void): EventSubscription =>
+    addListener('registered', ({ deviceToken, type }) =>
+      cb({ token: deviceToken, type, platform: type === 'fcm' ? 'android' : 'ios' })
+    ),
+  /** Delete the token (call on sign-out). */
+  delete: deleteDevicePushToken,
+} as const;
+
 export default {
-  Interests, Users,
+  Interests, Users, DeviceToken,
   start, getMode,
   subscribe, unsubscribe, setSubscriptions, getSubscriptions, clearSubscriptions,
   setUserId,
+  registerForDeviceToken, getDevicePushToken, deleteDevicePushToken,
   requestPermission, getPermissionStatus,
   createChannel, deleteChannel, getChannels,
   getBadgeCount, setBadgeCount, incrementBadgeCount,
