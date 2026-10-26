@@ -1,32 +1,97 @@
 # Migrating from react-native-pusher-push-notifications
 
-This is a rewrite of [ZeptInc/react-native-pusher-push-notifications](https://github.com/ZeptInc/react-native-pusher-push-notifications) (itself a fork of [b8ne's](https://github.com/b8ne/react-native-pusher-push-notifications)).
+Covers [`b8ne/react-native-pusher-push-notifications`](https://github.com/b8ne/react-native-pusher-push-notifications) (and its forks such as ZeptInc / pusher-community) → `expo-pusher-push-notifications` **0.5.x**.
 
-Here is what the ZeptInc and b8ne packages had, and where it lives now:
+> **This is not a drop-in replacement.** The API is promise-based, start-up is a single `start()`/`Interests.start()` call, and native setup moves from hand-edited AppDelegate/MainApplication code to an Expo config plugin. Budget a small refactor, not a package swap.
 
-| Original | Here |
+Using an AI agent? Point it at [`skills/migrate-from-b8ne/SKILL.md`](../skills/migrate-from-b8ne/SKILL.md) (shipped in the npm package).
+
+## 1. Install / remove
+
+```sh
+npm uninstall react-native-pusher-push-notifications
+npx expo install expo-pusher-push-notifications
+```
+
+Requires an Expo dev build / prebuild (not Expo Go). Bare RN apps need `expo` modules installed (`npx install-expo-modules`).
+
+## 2. Native setup: config plugin instead of AppDelegate edits
+
+| Old (manual) | New |
 |---|---|
-| `setInstanceId` / `setAppKey` | `start({ instanceId })` |
-| `subscribe` / `unsubscribe` with callbacks | Promise-based. |
-| `setSubscriptions` (iOS only), `getSubscriptions` (Android only) | Both on both platforms. |
-| `setOnSubscriptionsChangedListener` (Android only) | `subscriptionsChanged` event on both platforms. |
-| `setUserId(userId, token, onError, onSuccess)` (b8ne, static token) | `setUserId(userId, token)`. A remote token provider is also supported. |
-| `clearAllState` (b8ne) | `clearAllState()` |
-| `on('registered' \| 'notification')` | Same, plus `error`, and it returns a removable subscription. |
-| iOS foreground / background / opened states | `appState` on every notification. |
-| `aps.data.incrementBadge` (b8ne, iOS) | Supported on iOS and Android, plus full badge APIs. |
-| Android launch-intent notification delivery (b8ne) | `getInitialNotification()` and an `opened` event on tap. |
+| Carthage/CocoaPods `PushNotifications` framework, `RNPusherPushNotifications` imports | Autolinking (pods pulled automatically) |
+| AppDelegate: `didRegisterForRemoteNotificationsWithDeviceToken` → `[[RNPusherPushNotifications alloc] setDeviceToken:]`, `didReceiveRemoteNotification` forwarding | Expo AppDelegate subscriber in this module – **delete** those lines |
+| Android: `google-services.json` + gradle plugin lines, `MainApplication` / manifest service edits | Plugin config + `android.googleServicesFile` in app.json |
+| Push capability / background modes toggled in Xcode | Added by the plugin on prebuild |
 
-Neither original had custom sounds, notification channels, or local and scheduled notifications. Those are new here.
+```json
+{
+  "expo": {
+    "android": { "googleServicesFile": "./google-services.json" },
+    "plugins": [["expo-pusher-push-notifications", { "instanceId": "YOUR_BEAMS_INSTANCE_ID" }]]
+  }
+}
+```
+
+Then `npx expo prebuild --clean`. See [Setup](setup.md).
+
+## 3. API mapping
+
+| b8ne / forks | expo-pusher-push-notifications 0.5 |
+|---|---|
+| `import RNPusherPushNotifications from 'react-native-pusher-push-notifications'` | `import { Interests, Users, on } from 'expo-pusher-push-notifications'` |
+| `setInstanceId(id)` (+ `setAppKey` on some forks) | `await Interests.start(id)` or `await start({ instanceId: id })` |
+| `subscribe(interest, onError, onSuccess)` | `await Interests.subscribe(interest)` (try/catch) |
+| `unsubscribe(interest, onError, onSuccess)` | `await Interests.unsubscribe(interest)` |
+| `setSubscriptions(arr)` (iOS only) | `await Interests.set(arr)` (both platforms) |
+| `getSubscriptions(cb)` (Android only) | `const list = await Interests.get()` |
+| `setOnSubscriptionsChangedListener(cb)` | `on('subscriptionsChanged', cb)` |
+| `setUserId(userId, token, onError, onSuccess)` | `await Users.start(id)` then `await Users.login(userId, token)` — or pass `{ url, headers }` token provider instead of a static token |
+| `clearAllState()` | `await Users.logout()` / `Interests.reset()` / `clearAllState()` |
+| `on('registered', cb)` | `const sub = on('registered', cb)`; later `sub.remove()` |
+| `on('notification', cb)` with iOS `appState` | Same; `appState` on both platforms; also `opened` and `error` events |
+| Android launch-intent delivery | `await getInitialNotification()` + `on('opened', …)` |
+| `aps.data.incrementBadge` | Supported both platforms + `setBadgeCount` / `incrementBadgeCount` |
+| _(none)_ | Sounds, Android channels, local/scheduled notifications, raw device tokens (`DeviceToken`) |
+
+### Before / after
+
+```ts
+// before
+RNPusherPushNotifications.setInstanceId(INSTANCE_ID);
+RNPusherPushNotifications.on('registered', () => {
+  RNPusherPushNotifications.subscribe('news', err => console.warn(err), () => console.log('ok'));
+});
+RNPusherPushNotifications.on('notification', n => handle(n));
+
+// after
+import { Interests, on } from 'expo-pusher-push-notifications';
+const sub = on('notification', n => handle(n));
+await Interests.start(INSTANCE_ID);   // no need to wait for 'registered'
+await Interests.subscribe('news');
+// cleanup: sub.remove();
+```
+
+```ts
+// users — before
+RNPusherPushNotifications.setUserId(userId, beamsToken, onError, onSuccess);
+// after
+await Users.start(INSTANCE_ID);
+await Users.login(userId, { url: 'https://api.example.com/beams-token', headers: { Authorization: `Bearer ${jwt}` } });
+// sign-out
+await Users.logout();
+```
+
+## 4. Gotchas
+
+- Notification payload shape may differ slightly; log one and update field access (`n.title`, `n.body`, `n.data`).
+- Don't run alongside `expo-notifications` or `@react-native-firebase/messaging` (this module owns the delegate/FCM service).
+- `start()` requests notification permission by default; pass `{ requestPermission: false }` to control it yourself.
+- Calling Beams APIs before `start()` throws.
 
 ## Coming from 0.4
 
-0.5 brings back device-token support (`DeviceToken`, `registerForDeviceToken`, `getDevicePushToken`, `deleteDevicePushToken`, and `mode: 'device'`), same API as 0.3. Beams code from 0.4 keeps working unchanged.
-
-## Steps
-
-Remove the old package, its Carthage framework, and any `RNPusherPushNotifications` code in your AppDelegate and MainApplication. Autolinking, the config plugin, and the Expo AppDelegate subscriber replace them.
-
+0.5 brings back device-token support (`DeviceToken`, `registerForDeviceToken`, `getDevicePushToken`, `deleteDevicePushToken`, `mode: 'device'`). Beams code from 0.4 is unchanged.
 
 ---
 [← Back to README](../README.md)

@@ -103,6 +103,14 @@ Custom sounds go in the plugin's `sounds` option. Details in [Extras](docs/extra
 - [Full API](docs/api.md)
 - [Migrating from react-native-pusher-push-notifications](docs/migrating.md)
 
+## Agent migration
+
+Migrating from `react-native-pusher-push-notifications` (b8ne / forks) with Cursor, Claude, Grok or another coding agent? Tell it:
+
+> Follow `node_modules/expo-pusher-push-notifications/skills/migrate-from-b8ne/SKILL.md` to migrate this app.
+
+The skill has the inventory commands, search/replace table, native cleanup steps and a checklist. Human version: [Migrating](docs/migrating.md). Copy it into `.cursor/skills/` or `.claude/skills/` to make it auto-discoverable.
+
 ## Good to know
 
 - This module owns the iOS notification delegate and the Android FCM service, so don't run it alongside `expo-notifications` or `@react-native-firebase/messaging`.
