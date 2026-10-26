@@ -1,6 +1,6 @@
-# Mode 1: Beams interests
+# Interests (topics)
 
-**Use this when** many devices should get the same push. Think topics: `news`, `order-42`, `team-7`.
+Use interests when many devices should get the same push. Think topics: `news`, `order-42`, `team-7`.
 You need a Pusher Beams instance. Your server calls `publishToInterests`.
 
 ## Client

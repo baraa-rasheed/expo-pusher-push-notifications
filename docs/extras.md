@@ -1,6 +1,6 @@
 # Sounds, channels, badges, local notifications
 
-All of this works the same in both modes.
+All of this works whether you use interests, users, or both.
 
 ## Custom sounds
 

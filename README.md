@@ -1,23 +1,22 @@
 # expo-pusher-push-notifications
 
-Pusher Beams push notifications for Expo (SDK 58+). Custom sounds included.
+Push notifications for Expo and React Native, powered by [Pusher Beams](https://pusher.com/beams). Subscribe devices to topics, bind them to your signed-in users, and get custom sounds, Android channels, badges, and local notifications along the way.
 
 ```sh
 npx expo install expo-pusher-push-notifications
 ```
 
-Expo Go can't load native modules, so you'll need a dev build. See [Setup](docs/setup.md).
+Needs Expo SDK 58+ and a development build (Expo Go can't load native modules).
 
-## Pick one mode
+## Quick start
 
-| You want to… | Use | Needs |
-|---|---|---|
-| Send to everyone following a topic (`news`, `order-42`) | [**Interests**](docs/interests.md) | Pusher Beams |
-| Send to a signed-in user on all their devices | [**Users**](docs/users.md) | Pusher Beams + one auth endpoint |
+Add the config plugin to `app.json`:
 
-Each mode has its own object. Use one, ignore the other.
+```json
+["expo-pusher-push-notifications", { "instanceId": "YOUR_BEAMS_INSTANCE_ID" }]
+```
 
-### Interests
+Then in your app:
 
 ```ts
 import { Interests } from 'expo-pusher-push-notifications';
@@ -26,17 +25,51 @@ await Interests.start('YOUR_BEAMS_INSTANCE_ID');
 await Interests.subscribe('news');
 ```
 
-### Users
+That device now gets anything your server publishes to `news`. Full console steps (APNs, Firebase, Beams) are in [Setup](docs/setup.md).
+
+## Subscribe to interests (topics)
+
+Interests are topics like `news`, `order-42`, or `team-7`. Every device subscribed to one gets the push.
+
+```ts
+await Interests.subscribe('order-42');
+await Interests.unsubscribe('order-42');
+```
+
+More in [Interests](docs/interests.md).
+
+## Bind a device to a user
+
+When your backend thinks in user ids ("send this to user-123"), bind the device to the signed-in user. Beams asks your API for an auth token, so you need one small endpoint on your server.
 
 ```ts
 import { Users } from 'expo-pusher-push-notifications';
 
 await Users.start('YOUR_BEAMS_INSTANCE_ID');
-await Users.login('user-123', { url: 'https://api.example.com/beams-auth' });
-// sign-out: await Users.logout();
+
+// after your own sign-in
+await Users.login('user-123', {
+  url: 'https://api.example.com/pusher/beams-auth',
+  headers: { Authorization: `Bearer ${sessionToken}` },
+});
+
+// on sign-out
+await Users.logout();
 ```
 
-## Works in both modes
+You can use interests and users together. See [Authenticate users](docs/users.md) for the server side.
+
+## Send from your server
+
+```js
+import PushNotifications from '@pusher/push-notifications-server';
+const beams = new PushNotifications({ instanceId, secretKey });
+
+await beams.publishToInterests(['news'], payload);  // everyone on a topic
+await beams.publishToUsers(['user-123'], payload);  // one user, all their devices
+```
+
+## Extras
 
 ```ts
 import { addListener, createChannel, setBadgeCount, scheduleLocalNotification } from 'expo-pusher-push-notifications';
@@ -47,27 +80,22 @@ await setBadgeCount(3);
 await scheduleLocalNotification({ title: 'Stand up', seconds: 600, sound: 'alarm.wav' });
 ```
 
-Bundle sounds with the config plugin:
-
-```json
-["expo-pusher-push-notifications", { "sounds": ["./assets/alarm.wav"] }]
-```
-
-More: [sounds, channels, badges, local notifications](docs/extras.md).
+Custom sounds go in the plugin's `sounds` option. Details in [Extras](docs/extras.md).
 
 ## Docs
 
-- [Setup](docs/setup.md): install, config plugin options, Firebase / APNs / Beams console steps
-- [Interests](docs/interests.md) · [Users](docs/users.md)
+- [Setup](docs/setup.md)
+- [Interests](docs/interests.md)
+- [Authenticate users](docs/users.md)
 - [Sounds, channels, badges, local notifications](docs/extras.md)
 - [Full API](docs/api.md)
 - [Migrating from react-native-pusher-push-notifications](docs/migrating.md)
 
-## Heads up
+## Good to know
 
-- On iOS this module owns the notification delegate, and on Android it owns the FCM service. Don't run it alongside `expo-notifications` or `@react-native-firebase/messaging`.
-- Want a raw FCM / APNs token to send from your own server, without Beams? That's not what this package is for. Use [`expo-notifications`](https://docs.expo.dev/versions/latest/sdk/notifications/) and `getDevicePushTokenAsync()`.
-- Need realtime Pusher **Channels** (websockets)? That's a different product. Use [`pusher-js`](https://github.com/pusher/pusher-js); it works in Expo as is.
+- This module owns the iOS notification delegate and the Android FCM service, so don't run it alongside `expo-notifications` or `@react-native-firebase/messaging`.
+- Want a raw FCM / APNs token without Beams? Use [`expo-notifications`](https://docs.expo.dev/versions/latest/sdk/notifications/) instead.
+- Need realtime Pusher **Channels** (websockets)? Use [`pusher-js`](https://github.com/pusher/pusher-js).
 
 ## License
 
