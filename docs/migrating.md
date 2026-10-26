@@ -17,7 +17,11 @@ Here is what the ZeptInc and b8ne packages had, and where it lives now:
 | `aps.data.incrementBadge` (b8ne, iOS) | Supported on iOS and Android, plus full badge APIs. |
 | Android launch-intent notification delivery (b8ne) | `getInitialNotification()` and an `opened` event on tap. |
 
-Neither original had custom sounds, notification channels, local or scheduled notifications, or a raw-token mode. Those are new here.
+Neither original had custom sounds, notification channels, or local and scheduled notifications. Those are new here.
+
+## Coming from 0.3
+
+0.4 removes the `DeviceToken` mode (`DeviceToken`, `registerForDeviceToken`, `getDevicePushToken`, `deleteDevicePushToken`, and `mode: 'device'`). This package is Pusher Beams only now. If you need a raw FCM / APNs token for your own server, use [`expo-notifications`](https://docs.expo.dev/versions/latest/sdk/notifications/) and `getDevicePushTokenAsync()` instead.
 
 ## Steps
 

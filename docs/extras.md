@@ -1,6 +1,6 @@
 # Sounds, channels, badges, local notifications
 
-All of this works the same in every mode.
+All of this works the same in both modes.
 
 ## Custom sounds
 
