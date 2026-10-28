@@ -1,6 +1,6 @@
 {
   "name": "expo-pusher-push-notifications",
-  "version": "0.6.0",
+  "version": "0.6.1",
   "description": "Push notifications for Expo: Pusher Beams (interests / users) with custom sounds, channels, badges and local notifications",
   "main": "build/index.js",
   "types": "build/index.d.ts",

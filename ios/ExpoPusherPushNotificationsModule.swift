@@ -39,7 +39,6 @@ public class ExpoPusherPushNotificationsModule: Module {
       ExpoPusherAppDelegateSubscriber.onTokenError = { [weak self] error in
         guard let self = self else { return }
         self.sendEvent("error", ["code": "E_APNS_REGISTRATION", "message": error.localizedDescription])
-        waiters.forEach { $0.reject("E_APNS_REGISTRATION", error.localizedDescription) }
       }
       ExpoPusherAppDelegateSubscriber.onNotification = { [weak self] userInfo, state in
         self?.handleRemote(userInfo, state: state)
