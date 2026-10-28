@@ -1,7 +1,7 @@
 {
   "name": "expo-pusher-push-notifications",
-  "version": "0.5.3",
-  "description": "Push notifications for Expo: Pusher Beams (interests / users) or raw FCM/APNs device tokens (no EAS needed), with custom sounds, channels, badges and local notifications",
+  "version": "0.6.0",
+  "description": "Push notifications for Expo: Pusher Beams (interests / users) with custom sounds, channels, badges and local notifications",
   "main": "build/index.js",
   "types": "build/index.d.ts",
   "scripts": {
@@ -24,8 +24,7 @@
     "push-notifications",
     "config-plugin",
     "fcm",
-    "apns",
-    "device-token"
+    "apns"
   ],
   "repository": "https://github.com/baraa-rasheed/expo-pusher-push-notifications",
   "bugs": {

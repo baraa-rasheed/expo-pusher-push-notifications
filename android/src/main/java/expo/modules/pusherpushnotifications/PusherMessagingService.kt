@@ -4,8 +4,7 @@ import com.google.firebase.messaging.RemoteMessage
 import com.pusher.pushnotifications.fcm.MessagingService
 
 /**
- * Single FCM service for all three modes. Extends the Beams MessagingService so Beams keeps working
- * in `interests`/`users` mode; in `device` mode it simply receives raw FCM messages from your server.
+ * Single FCM service. Extends the Beams MessagingService so Beams (interests and users) keeps working.
  */
 class PusherMessagingService : MessagingService() {
   companion object { @Volatile var module: ExpoPusherPushNotificationsModule? = null }
