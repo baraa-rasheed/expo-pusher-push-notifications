@@ -1,21 +1,14 @@
 # expo-pusher-push-notifications
 
-Push notifications for Expo and React Native, with two independent paths:
-
-- **Pusher Beams** — subscribe devices to interests (topics) and/or bind them to your signed-in users. Uses [Pusher Beams](https://pusher.com/beams).
-- **Device token** — get the raw FCM (Android) / APNs (iOS) token for your own push path. No Beams, no `expo-notifications`, no EAS.
-
-Both get custom sounds, Android channels, badges, and local notifications.
-
-You can use **either or both**: Beams only, device token only, or Beams and device token together in the same app. The two paths are independent, and each section below is self-contained, so follow only the one(s) you need.
+Push notifications for Expo and React Native with [Pusher Beams](https://pusher.com/beams), the Expo counterpart of `react-native-pusher-push-notifications`. Subscribe devices to interests (topics) and bind them to your signed-in users, plus custom sounds, Android channels, badges, and local notifications.
 
 ## Prerequisites
 
-Links only; set up what your path needs.
+Links only.
 
-- [Android: Firebase / FCM setup](https://firebase.google.com/docs/android/setup) — create a Firebase project and add `google-services.json` (all paths).
-- [Apple: APNs setup](https://developer.apple.com/documentation/usernotifications/registering-your-app-with-apns) — enable Push Notifications and create an APNs key (all paths).
-- [Pusher Beams instance setup](https://pusher.com/docs/beams/getting-started/create-instance/) — create an instance and upload your FCM / APNs credentials (Beams path only).
+- [Android: Firebase / FCM setup](https://firebase.google.com/docs/android/setup) — create a Firebase project and add `google-services.json`.
+- [Apple: APNs setup](https://developer.apple.com/documentation/usernotifications/registering-your-app-with-apns) — enable Push Notifications and create an APNs key.
+- [Pusher Beams instance setup](https://pusher.com/docs/beams/getting-started/create-instance/) — create an instance and upload your FCM / APNs credentials.
 
 More detail in [Setup](docs/setup.md#prerequisites).
 
@@ -27,11 +20,9 @@ npx expo install expo-pusher-push-notifications
 
 Needs Expo SDK 58+ and a development build (Expo Go can't load native modules). Run `npx expo prebuild` after adding the plugin.
 
-## Beams path
+## Getting started
 
-Use Pusher Beams to push to topics (interests) and/or to your signed-in users.
-
-1. **Add the plugin with your Beams instance ID** in `app.json`. Add `"mode": "users"` if you bind users (interests still work in that mode):
+1. **Add the plugin with your Beams instance ID** in `app.json`:
 
    ```json
    ["expo-pusher-push-notifications", { "instanceId": "YOUR_BEAMS_INSTANCE_ID", "apsEnvironment": "development" }]
@@ -73,56 +64,6 @@ Use Pusher Beams to push to topics (interests) and/or to your signed-in users.
 
 More in [Interests](docs/interests.md) and [Users](docs/users.md).
 
-## Device token path
-
-Get the raw FCM (Android) / APNs (iOS) token and push from your own backend. No Beams, no `expo-notifications`, no EAS.
-
-1. **Add the plugin** in `app.json` with `"mode": "device"` and no `instanceId`:
-
-   ```json
-   ["expo-pusher-push-notifications", { "mode": "device", "apsEnvironment": "development" }]
-   ```
-
-2. **Prebuild and build** a development build: `npx expo prebuild`.
-
-3. **Get the token** and send it to your backend:
-
-   ```ts
-   import { DeviceToken } from 'expo-pusher-push-notifications';
-
-   const token = await DeviceToken.start(); // { type: 'fcm' | 'apns', platform, token }
-   await api.saveDevice(token);
-   ```
-
-4. **Keep it fresh** — tokens rotate:
-
-   ```ts
-   DeviceToken.onChange((t) => api.saveDevice(t));
-   ```
-
-5. **On sign-out**, delete it: `await DeviceToken.delete();`
-
-6. **Send pushes** from your backend directly to FCM / APNs with that token.
-
-More in [Device token](docs/direct.md).
-
-## Using both together
-
-Follow the Beams path, then also grab the raw token. `registerForDeviceToken()` works in any mode, so it doesn't stop Beams:
-
-```ts
-import { Interests, registerForDeviceToken, DeviceToken } from 'expo-pusher-push-notifications';
-
-await Interests.start('YOUR_BEAMS_INSTANCE_ID');
-await Interests.subscribe('news');
-
-const token = await registerForDeviceToken(); // raw FCM / APNs token
-await api.saveDevice(token);
-DeviceToken.onChange((t) => api.saveDevice(t));
-```
-
-Keep the plugin config from the Beams path (with `instanceId`). Don't call `DeviceToken.start()` here, as that switches the module to device-only mode.
-
 ## Extras
 
 ```ts
@@ -141,7 +82,6 @@ Custom sounds go in the plugin's `sounds` option. Details in [Extras](docs/extra
 - [Setup](docs/setup.md)
 - [Interests](docs/interests.md)
 - [Users](docs/users.md)
-- [Device token](docs/direct.md)
 - [Sounds, channels, badges, local notifications](docs/extras.md)
 - [Full API](docs/api.md)
 - [Migrating from react-native-pusher-push-notifications](docs/migrating.md)

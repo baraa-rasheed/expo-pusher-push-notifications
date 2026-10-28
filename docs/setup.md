@@ -20,7 +20,7 @@ Set these up first. Android and Apple steps apply to every path; the Beams step 
 
 ### Beams (Interests / Users only)
 
-Create an instance in the [Pusher dashboard](https://dashboard.pusher.com/beams), upload the APNs key (with Key ID / Team ID) and the FCM service account JSON, and copy the instance ID. For the device-token path, skip this — your backend talks to FCM / APNs with those same credentials.
+Create an instance in the [Pusher dashboard](https://dashboard.pusher.com/beams), upload the APNs key (with Key ID / Team ID) and the FCM service account JSON, and copy the instance ID.
 
 ## Install
 
@@ -53,16 +53,13 @@ npx expo install expo-pusher-push-notifications
 }
 ```
 
-Leave out `instanceId` (and set `"mode": "device"`) if you use the device-token path.
-
 Then run `npx expo prebuild` and build a development build. Expo Go cannot load this native module.
 
 ### Plugin options
 
 | Option | Default | What it does |
 |---|---|---|
-| `mode` | `interests` | `interests` or `users` for Beams, or `device` for a raw device token. Written to Info.plist and the manifest. You can leave it out. |
-| `instanceId` | none | Beams instance ID. Not needed for `device`. |
+| `instanceId` | none | Beams instance ID. |
 | `apsEnvironment` | `development` | Sets the `aps-environment` entitlement. Use `production` for TestFlight and App Store builds. |
 | `sounds` | `[]` | Sound files to bundle. **Android:** copied to `res/raw` with names lower-cased to `[a-z0-9_]`. **iOS:** copied into the app target and added to its resources. iOS needs `.wav`, `.caf`, or `.aiff` under 30 s. |
 | `androidChannels` | `[]` | Channels created at startup. Set `sound` to a file name from `sounds`, or `null` for a silent channel. |
@@ -73,13 +70,12 @@ The plugin also adds the `remote-notification` background mode on iOS. On Androi
 
 ## Start, per path
 
-The Beams paths (Interests, Users) and the DeviceToken path are independent: use either or both. To use both, start Beams and call `registerForDeviceToken()` (works in any mode) instead of `DeviceToken.start()`.
+Interests and Users can be used together.
 
 | Path | Plugin config | First call |
 |---|---|---|
 | Interests | `instanceId` | `Interests.start(instanceId)` then `Interests.subscribe('news')` — see [Interests](interests.md) |
-| Users | `instanceId`, `mode: "users"` | `Users.start(instanceId)` then `Users.login(userId, tokenProvider)` after sign-in — see [Users](users.md) |
-| DeviceToken | `mode: "device"`, no `instanceId` | `DeviceToken.start()` → send `token` to your backend — see [Device token](direct.md) |
+| Users | `instanceId` | `Users.start(instanceId)` then `Users.login(userId, tokenProvider)` after sign-in — see [Users](users.md) |
 
 ## Permissions
 

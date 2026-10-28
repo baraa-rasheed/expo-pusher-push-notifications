@@ -52,7 +52,7 @@ Then `npx expo prebuild --clean`. See [Setup](setup.md).
 | `on('notification', cb)` with iOS `appState` | Same; `appState` on both platforms; also `opened` and `error` events |
 | Android launch-intent delivery | `await getInitialNotification()` + `on('opened', …)` |
 | `aps.data.incrementBadge` | Supported both platforms + `setBadgeCount` / `incrementBadgeCount` |
-| _(none)_ | Sounds, Android channels, local/scheduled notifications, raw device tokens (`DeviceToken`) |
+| _(none)_ | Sounds, Android channels, local/scheduled notifications |
 
 ### Before / after
 
@@ -89,9 +89,9 @@ await Users.logout();
 - `start()` requests notification permission by default; pass `{ requestPermission: false }` to control it yourself.
 - Calling Beams APIs before `start()` throws.
 
-## Coming from 0.4
+## Coming from 0.4 / 0.5
 
-0.5 brings back device-token support (`DeviceToken`, `registerForDeviceToken`, `getDevicePushToken`, `deleteDevicePushToken`, `mode: 'device'`). Beams code from 0.4 is unchanged.
+0.6 is Beams-only, like `react-native-pusher-push-notifications`. The device-token API from 0.5 (`DeviceToken`, `registerForDeviceToken`, `getDevicePushToken`, `deleteDevicePushToken`, `getMode`, `start({ mode })` and the plugin's `mode` option) is removed. Beams code from 0.4/0.5 is unchanged; drop any `mode` from your plugin config.
 
 ---
 [← Back to README](../README.md)
