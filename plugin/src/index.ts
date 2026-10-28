@@ -24,12 +24,10 @@ export interface PusherPluginChannel {
 }
 
 export interface PusherPluginProps {
-  /** Pusher Beams instance ID (not needed for `device` mode). */
+  /** Pusher Beams instance ID. */
   instanceId?: string;
   /** APNs environment for the aps-environment entitlement. Defaults to "development". */
   apsEnvironment?: 'development' | 'production';
-  /** Default mode written to native config. Defaults to "interests". */
-  mode?: 'interests' | 'users' | 'device';
   /**
    * Sound files (paths relative to the project root) to bundle. Android: copied to res/raw
    * (lower-cased, must be [a-z0-9_]). iOS: added to the main bundle. Use .wav/.caf/.aiff for iOS (<30s).
@@ -89,7 +87,6 @@ const withSoundsIos: ConfigPlugin<string[]> = (config, sounds) =>
 
 const withPusher: ConfigPlugin<PusherPluginProps | void> = (config, props) => {
   const p: PusherPluginProps = props ?? {};
-  const mode = p.mode ?? 'interests';
   const sounds = p.sounds ?? [];
   const channels = (p.androidChannels ?? []).map((ch) => ({
     ...ch,
@@ -106,7 +103,6 @@ const withPusher: ConfigPlugin<PusherPluginProps | void> = (config, props) => {
     modes.add('remote-notification');
     c.modResults.UIBackgroundModes = [...modes];
     if (p.instanceId) c.modResults.PusherBeamsInstanceId = p.instanceId;
-    c.modResults.PusherBeamsMode = mode;
     c.modResults.PusherShowInForeground = p.iosShowInForeground ?? true;
     return c;
   });
@@ -116,7 +112,6 @@ const withPusher: ConfigPlugin<PusherPluginProps | void> = (config, props) => {
       AndroidConfig.Manifest.addMetaDataItemToMainApplication(app, k, v);
     };
     if (p.instanceId) meta('pusher_beams_instance_id', p.instanceId);
-    meta('pusher_beams_mode', mode);
     meta('pusher_default_channel_id', defaultChannelId);
     meta('com.google.firebase.messaging.default_notification_channel_id', defaultChannelId);
     if (channels.length) meta('pusher_channels', JSON.stringify(channels));
